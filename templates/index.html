@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Code Execution</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.60.0/codemirror.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.60.0/theme/dracula.css">
+    <style>
+        .CodeMirror {
+            height: 300px;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+    <h2>Code Editor</h2>
+    <select id="selectLanguage" style="font-size: 20px;">
+        <option value="javascript">JavaScript</option>
+        <option value="python">Python</option>
+        <option value="html">Html/Xml</option>
+        <option value="dart">Dart</option>
+        <option value="cpp">C/C++</option>
+        <option value="sql">SQL</option>
+        <option value="go">Go</option>
+        <option value="java">Java</option>
+
+    </select>
+    <textarea id="code" rows="10" cols="50"></textarea>
+    <button id="runButton">Run Code</button>
+    <div id="output"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.60.0/codemirror.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.60.0/addon/mode/simple.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.60.0/mode/python/python.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.60.0/mode/javascript/javascript.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.60.0/mode/htmlmixed/htmlmixed.js"></script>
+    <!-- Add the C/C++ mode script -->
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.60.0/mode/dart/dart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.60.0/mode/clike/clike.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.60.0/mode/sql/sql.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.60.0/mode/clike/clike.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.60.0/addon/mode/simple.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.60.0/mode/golang/golang.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.60.0/mode/xml/xml.js"></script>
+   
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            var editor = CodeMirror.fromTextArea(document.getElementById("code"), {
+                mode: "javascript", // Default mode is JavaScript
+                theme: "dracula",
+                lineNumbers: true,
+            });
+
+            var selectLanguage = document.getElementById("selectLanguage");
+            var runButton = document.getElementById("runButton");
+            var outputContainer = document.getElementById("output");
+
+            function runCode() {
+                outputContainer.innerHTML = ""; // Clear previous output
+                var selectedLanguage = selectLanguage.value;
+                var code = editor.getValue();
+
+                if (selectedLanguage === "javascript") {
+                    fetch("/run-javascript", {
+                        method: "POST",
+                        body: JSON.stringify({ code: code }),
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                    })
+                        .then((response) => response.json())
+                        .then((data) => {
+                            console.log(data.output);
+                            outputContainer.innerHTML = "Output: " + data.output;
+                        })
+                        .catch((error) => {
+                            outputContainer.innerHTML = "Error: " + error;
+                        });
+                }
+
+                else if (selectedLanguage === "python") {
+                    // Send the Python code to the Flask server
+                    fetch("/run-python", {
+                        method: "POST",
+                        body: JSON.stringify({ code: code }),
+                        
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                    })
+                        .then((response) => response.text())
+                        .then((data) => {
+                            console.log(data.result);
+                            outputContainer.innerHTML = "Output: " + data;
+                        })
+                        .catch((error) => {
+                            outputContainer.innerHTML = "Error: " + error;
+                        });
+                } else if (selectedLanguage === "html") {
+                    editor.setOption("mode", "xml");
+                    editor.refresh(); // Refresh the editor to apply the new mode
+                    outputContainer.innerHTML = code;
+                } else if (selectedLanguage === "dart") {
+                    editor.setOption("mode", "dart");
+                    fetch("/run-dart", {
+                        method: "POST",
+                        body: JSON.stringify({ code: code }),
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                    })
+                        .then((response) => response.text())
+                        .then((data) => {
+                            outputContainer.innerHTML = "Output: " + data;
+                        })
+                        .catch((error) => {
+                            outputContainer.innerHTML = "Error: " + error;
+                        });
+
+                    
+                } else if (selectedLanguage === "cpp") {
+                    // Send the C/C++ code to the Flask server
+                    editor.setOption("mode", "text/x-c++src"); 
+                    fetch("/run-cplusplus", {
+                        method: "POST",
+                        body: JSON.stringify({ code: code }),
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                    })
+                        .then((response) => response.json())
+                        .then((data) => {
+                            console.log(data.output);
+                            outputContainer.innerHTML = "Output: " + data.output;
+                        })
+                        .catch((error) => {
+                            outputContainer.innerHTML = "Error: " + error;
+                        });
+                }
+                else if (selectedLanguage === "sql") {
+            // Send SQL code to your server for execution
+                        fetch("/run-sql", {
+                            method: "POST",
+                            body: JSON.stringify({ code: code }),
+                            headers: {
+                                "Content-Type": "application/json",
+                            },
+                        })
+                            .then((response) => response.text())
+                            .then((data) => {
+                                console.log(data);
+                                outputContainer.innerHTML = "SQL Output: " + data;
+                            })
+                            .catch((error) => {
+                                outputContainer.innerHTML = "Error: " + error;
+                            });
+                    }else if (selectedLanguage === "go") {
+    
+                            editor.setOption("mode", "text/x-go");
+                            
+                            // Prepare the request data
+                            const requestData = {
+                                code: code,
+                            };
+
+                            // Make an HTTP POST request to execute Go code
+                            fetch("/run-go", {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                },
+                                body: JSON.stringify(requestData),
+                            })
+                            .then((response) => {
+                                if (response.ok) {
+                                    // If the response status is 200 (OK), read it as text
+                                    return response.text();
+                                } else {
+                                    // If there's an error response, reject the promise
+                                    throw new Error("HTTP Error: " + response.status);
+                                }
+                            })
+                            .then((data) => {
+                                // Display the Go output in the outputContainer
+                                outputContainer.innerHTML = "Go Output: " + data;
+                            })
+                            .catch((error) => {
+                                // Handle any errors that occur during the request
+                                outputContainer.innerHTML = "Error: " + error;
+                            });
+                        }
+
+                        else if (selectedLanguage === "java") {
+    
+                        editor.setOption("mode", "text/x-java");
+                        fetch("/run-java", {
+                            method: "POST",
+                            body: JSON.stringify({ code: code }),
+                            headers: {
+                                "Content-Type": "application/json",
+                            },
+                        })
+                            .then((response) => response.text())
+                            .then((data) => {
+                                outputContainer.innerHTML = "Java Output: " + data;
+                            })
+                            .catch((error) => {
+                                outputContainer.innerHTML = "Error: " + error;
+                            });
+                    }
+
+
+            }
+
+            selectLanguage.addEventListener("change", function () {
+                var selectedLanguage = selectLanguage.value;
+                editor.setOption("mode", selectedLanguage);
+            });
+
+            runButton.addEventListener("click", runCode);
+        });
+    </script>
+</body>
+</html>
